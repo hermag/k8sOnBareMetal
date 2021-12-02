@@ -29,20 +29,17 @@ This role contains tasks to:
 - Clone the Project:
 
 ```
-$ git clone https://github.com/jmutai/k8s-pre-bootstrap.git
+$ git clone https://github.com/hermag/k8sOnBareMetal.git
 ```
 
 - Configure `/etc/hosts` file in your bastion or workstation with all nodes and ip addresses. Example:
 
 ```
-192.168.200.10 k8smaster01.example.com k8smaster01
-192.168.200.11 k8smaster02.example.com k8smaster02
-192.168.200.12 k8smaster03.example.com k8smaster03
-
-192.168.200.13 k8snode01.example.com k8snode01
-192.168.200.14 k8snode02.example.com k8snode02
-192.168.200.15 k8snode03.example.com k8snode03
-192.168.200.16 k8snode04.example.com k8snode04
+192.168.122.111 k8sm.k8s.net k8sm
+192.168.122.101 k8sn01.k8s.net k8sn01
+192.168.122.102 k8sn02.k8s.net k8sn02
+192.168.122.103 k8sn03.k8s.net k8sn03
+192.168.122.201 bastion.k8s.net bastion
 ```
 
 - Update your inventory, for example:
@@ -50,13 +47,11 @@ $ git clone https://github.com/jmutai/k8s-pre-bootstrap.git
 ```
 $ vim hosts
 [k8snodes]
-k8smaster01
-k8smaster02
-k8smaster03
-k8snode01
-k8snode02
-k8snode03
-k8snode04
+k8sm
+k8sn01
+k8sn02
+k8sn03
+bastion
 ```
 
 - Update variables in playbook file
@@ -75,12 +70,12 @@ $ vim k8s-prep.yml
     timezone: "Africa/Nairobi"                           # Timezone to set on all nodes
     k8s_cni: calico                                      # calico, flannel
     container_runtime: cri-o                             # docker, cri-o, containerd
-    pod_network_cidr: "192.168.0.0/16"                   # pod subnet if using cri-o runtime
+    pod_network_cidr: "172.16.0.0/16"                    # pod subnet if using cri-o runtime
     configure_firewalld: false                           # true / false (keep it false, k8s>1.19 have issues with firewalld)
     # Docker proxy support
-    setup_proxy: false                                   # Set to true to configure proxy
-    proxy_server: "proxy.example.com:8080"               # Proxy server address and port
-    docker_proxy_exclude: "localhost,127.0.0.1"          # Adresses to exclude from proxy
+    #setup_proxy: false                                   # Set to true to configure proxy
+    #proxy_server: "proxy.example.com:8080"               # Proxy server address and port
+    #docker_proxy_exclude: "localhost,127.0.0.1"          # Adresses to exclude from proxy
   roles:
     - kubernetes-bootstrap
 ```
@@ -126,9 +121,7 @@ $ vim roles/kubernetes-bootstrap/tasks/configure_firewalld.yml
 If your master nodes doesn't contain `master` and nodes doesn't have `node or worker` as part of its hostname, update the file to reflect your naming pattern. My nodes are named like below:
 
 ```
-k8smaster01
-k8smaster02
-k8sworker01
+k8sm
 ....
 ```
 
@@ -174,12 +167,16 @@ Execution should be successful without errors:
 
 ```
 TASK [kubernetes-bootstrap : Reload firewalld] *********************************************************************************************************
-changed: [k8smaster01]
-changed: [k8snode01]
-changed: [k8snode02]
+changed: [k8sm]
+changed: [k8sn01]
+changed: [k8sn02]
+changed: [k8sn03]
+changed: [bastion]
 
 PLAY RECAP *********************************************************************************************************************************************
-k8smaster01                : ok=23   changed=3    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
-k8snode01                  : ok=23   changed=3    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
-k8snode02                  : ok=23   changed=3    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
+k8sm                       : ok=23   changed=3    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
+k8sn01                     : ok=23   changed=3    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
+k8sn02                     : ok=23   changed=3    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
+k8sn03                     : ok=23   changed=3    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
+bastion                    : ok=23   changed=3    unreachable=0    failed=0    skipped=11   rescued=0    ignored=0
 ```
